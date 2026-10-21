@@ -11,7 +11,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'sua_chave_secreta_super_segura';
 
 // Configuração do Supabase
 const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_KEY; // Use a chave Service Role
+const supabaseKey = process.env.SUPABASE_KEY; 
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 app.use(cors());
@@ -44,7 +44,7 @@ app.post('/api/login', async (req, res) => {
             .single();
 
         if (error || !user) return res.status(401).json({ error: 'Usuário não encontrado.' });
-        if (user.password !== password) return res.status(401).json({ error: 'Senha incorreta.' }); // Em prod, use bcrypt.compare
+        if (user.password !== password) return res.status(401).json({ error: 'Senha incorreta.' });
 
         const token = jwt.sign({ id: user.id, nome: user.nome }, JWT_SECRET, { expiresIn: '1d' });
         res.json({ token, nome: user.nome });
@@ -53,7 +53,7 @@ app.post('/api/login', async (req, res) => {
     }
 });
 
-// Rotas de Registros (Protegidas)
+// Rotas de Registros
 app.get('/api/registros', autenticarToken, async (req, res) => {
     try {
         const { data, error } = await supabase
@@ -93,7 +93,7 @@ app.put('/api/registros/:id', autenticarToken, async (req, res) => {
             .from('jornada_registros')
             .update({ materia, conteudo, data, qtd_questoes, qtd_erros })
             .eq('id', id)
-            .eq('usuario_id', req.user.id) // Garante que o usuário só edite o próprio registro
+            .eq('usuario_id', req.user.id)
             .select()
             .single();
 
@@ -120,6 +120,7 @@ app.delete('/api/registros/:id', autenticarToken, async (req, res) => {
     }
 });
 
-app.listen(PORT, () => {
+// O Render exige que o host seja '0.0.0.0' para rotear o tráfego externo
+app.listen(PORT, '0.0.0.0', () => {
     console.log(`Servidor rodando na porta ${PORT}`);
 });
