@@ -21,8 +21,6 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 
 app.use(cors());
 app.use(express.json());
-
-// CORREÇÃO AQUI: Agora o Express procura os arquivos HTML/CSS/JS dentro da pasta 'public'
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Middleware de Autenticação
@@ -39,7 +37,7 @@ function autenticarToken(req, res, next) {
     });
 }
 
-// Rota de Login
+// Rota de Login (Acessível sem autenticação)
 app.post('/api/login', async (req, res) => {
     const { username, password } = req.body;
 
@@ -60,7 +58,7 @@ app.post('/api/login', async (req, res) => {
     }
 });
 
-// Rotas de Registros
+// Rotas de Registros (Protegidas)
 app.get('/api/registros', autenticarToken, async (req, res) => {
     try {
         const { data, error } = await supabase
