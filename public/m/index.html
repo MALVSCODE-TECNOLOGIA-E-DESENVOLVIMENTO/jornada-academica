@@ -8,15 +8,15 @@
 </head>
 <body>
     <div class="container">
+        <!-- Top Bar Mobile -->
         <div class="top-bar">
             <h1 class="system-title">Jornada Acadêmica</h1>
-            <button onclick="abrirModal()" class="btn-primary">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                Novo Registro
+            <button onclick="logout()" class="btn-icon" title="Sair">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
             </button>
         </div>
 
-        <!-- Dashboards -->
+        <!-- Dashboards (Mantendo Cores e Ícones) -->
         <div class="dashboard-grid">
             <div class="stat-card">
                 <div class="stat-icon bg-blue">
@@ -40,47 +40,36 @@
                 <div class="stat-icon bg-yellow">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
                 </div>
-                <div class="stat-content"><span class="stat-label">Desempenho Geral</span><strong class="stat-value" id="dash-desempenho">0%</strong></div>
+                <div class="stat-content"><span class="stat-label">Desempenho</span><strong class="stat-value" id="dash-desempenho">0%</strong></div>
             </div>
         </div>
 
-        <!-- Tabela -->
-        <div class="card table-card">
-            <div class="search-bar">
-                <input type="text" id="search" placeholder="Buscar por conteúdo..." oninput="renderTable()">
-                <select id="filter-materia" class="filter-select" onchange="renderTable()">
-                    <option value="">Todas as Matérias</option>
+        <!-- Filtros Mobile -->
+        <div class="filters-mobile">
+            <input type="text" id="search" placeholder="Buscar por conteúdo ou matéria..." oninput="renderTable()">
+            <div class="filter-row">
+                <select id="filter-materia" onchange="renderTable()">
+                    <option value="">Matéria (Todas)</option>
                 </select>
-                <select id="filter-situacao" class="filter-select" onchange="renderTable()">
-                    <option value="">Todos os Desempenhos</option>
+                <select id="filter-situacao" onchange="renderTable()">
+                    <option value="">Desempenho (Todos)</option>
                     <option value="ÓTIMO">ÓTIMO</option>
                     <option value="BOM">BOM</option>
                     <option value="RUIM">RUIM</option>
                 </select>
             </div>
-            <div style="overflow-x: auto;">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Matéria</th>
-                            <th>Conteúdo</th>
-                            <th>Data</th>
-                            <th>Desempenho</th>
-                            <th style="text-align: center;">Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody id="table-body"></tbody>
-                </table>
-            </div>
         </div>
+
+        <!-- Lista de Cards Mobile -->
+        <div id="list-container" class="list-container"></div>
     </div>
 
-    <!-- Botão Logout Fixo -->
-    <button onclick="logout()" class="btn-logout-fixed" title="Sair do Sistema">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+    <!-- FAB (Botão Flutuante) -->
+    <button onclick="abrirModal()" class="fab" title="Novo Registro">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
     </button>
 
-    <!-- Modal Principal -->
+    <!-- Modal Principal (Bottom Sheet) -->
     <div id="modal-form" class="modal-overlay">
         <div class="modal-content">
             <div class="modal-header">
@@ -109,11 +98,11 @@
                     <label>Conteúdo *</label>
                     <input type="text" id="conteudo" required>
                 </div>
+                <div class="form-group">
+                    <label>Data *</label>
+                    <input type="date" id="data" required>
+                </div>
                 <div class="form-row">
-                    <div class="form-group">
-                        <label>Data *</label>
-                        <input type="date" id="data" required>
-                    </div>
                     <div class="form-group">
                         <label>QTD Questões *</label>
                         <input type="number" id="qtd_questoes" min="1" required oninput="calcularDesempenhoModal()">
@@ -129,20 +118,20 @@
                 </div>
                 <div class="modal-actions">
                     <button type="button" onclick="fecharModal()" class="btn-secondary">Cancelar</button>
-                    <button type="submit" class="btn-primary">Salvar</button>
+                    <button type="submit" class="btn-primary">Salvar Registro</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Modal Revisão -->
+    <!-- Modal Revisão (Bottom Sheet) -->
     <div id="modal-revisao" class="modal-overlay">
         <div class="modal-content">
             <div class="modal-header">
-                <h2>Conteúdos para Revisão (BOM / RUIM)</h2>
+                <h2>Revisão Pendente</h2>
                 <button onclick="fecharModalRevisao()" class="close-btn">&times;</button>
             </div>
-            <div style="max-height: 400px; overflow-y: auto;">
+            <div class="table-responsive">
                 <table class="table-revisao">
                     <thead>
                         <tr><th>Matéria</th><th>Conteúdo</th><th>Data</th></tr>
@@ -150,7 +139,7 @@
                     <tbody id="revisao-body"></tbody>
                 </table>
             </div>
-            <div class="modal-actions">
+            <div class="modal-actions mt-1">
                 <button type="button" onclick="fecharModalRevisao()" class="btn-secondary">Fechar</button>
             </div>
         </div>
