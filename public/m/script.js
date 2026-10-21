@@ -8,7 +8,7 @@ if (!token) {
 
 const formRegistro = document.getElementById('form-registro');
 const modal = document.getElementById('modal-form');
-const tableBody = document.getElementById('table-body');
+const listContainer = document.getElementById('list-container');
 
 function logout() {
     localStorage.removeItem('jornada_token');
@@ -36,7 +36,7 @@ async function carregarRegistros() {
 function preencherFiltroMaterias() {
     const select = document.getElementById('filter-materia');
     const materiasUnicas = [...new Set(registrosGlobais.map(r => r.materia))].sort();
-    select.innerHTML = '<option value="">Todas as Matérias</option>';
+    select.innerHTML = '<option value="">Matéria (Todas)</option>';
     materiasUnicas.forEach(m => {
         select.innerHTML += `<option value="${m}">${m}</option>`;
     });
@@ -53,6 +53,7 @@ function obterSituacao(desempenho) {
     return { texto: 'RUIM', classe: 'badge-ruim' };
 }
 
+// Renderização em formato de Cards para Mobile
 function renderTable() {
     const search = document.getElementById('search').value.toLowerCase();
     const materiaFiltro = document.getElementById('filter-materia').value;
@@ -70,27 +71,31 @@ function renderTable() {
     });
 
     if (filtrados.length === 0) {
-        tableBody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#6B7280; padding:2rem;">Nenhum registro encontrado.</td></tr>`;
+        listContainer.innerHTML = `<p style="text-align:center; color:#6B7280; padding:2rem;">Nenhum registro encontrado.</p>`;
         return;
     }
 
-    tableBody.innerHTML = filtrados.map(r => {
+    listContainer.innerHTML = filtrados.map(r => {
         const dataFormatada = new Date(r.data + 'T00:00:00').toLocaleDateString('pt-BR');
         const desempenho = calcularDesempenho(r.qtd_questoes, r.qtd_erros);
         const situacao = obterSituacao(desempenho);
-        const rowClass = situacao.texto === 'ÓTIMO' ? 'row-otimo' : '';
+        const cardClass = situacao.texto === 'ÓTIMO' ? 'row-otimo' : '';
 
         return `
-            <tr class="${rowClass}">
-                <td><strong>${r.materia}</strong></td>
-                <td>${r.conteudo}</td>
-                <td>${dataFormatada}</td>
-                <td><span class="badge ${situacao.classe}">${situacao.texto}</span></td>
-                <td style="text-align: center;">
+            <div class="mobile-card ${cardClass}">
+                <div class="mc-header">
+                    <strong>${r.materia}</strong>
+                    <span class="badge ${situacao.classe}">${situacao.texto}</span>
+                </div>
+                <div class="mc-body">
+                    <p><strong>Conteúdo:</strong> ${r.conteudo}</p>
+                    <p><strong>Data:</strong> ${dataFormatada}</p>
+                </div>
+                <div class="mc-actions">
                     <button class="action-btn btn-edit" onclick="abrirModal('${r.id}')">Editar</button>
                     <button class="action-btn btn-delete" onclick="excluirRegistro('${r.id}')">Excluir</button>
-                </td>
-            </tr>
+                </div>
+            </div>
         `;
     }).join('');
 }
@@ -123,7 +128,7 @@ function abrirModalRevisao() {
     });
 
     if (revisar.length === 0) {
-        revisaoBody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#6B7280;">Nenhum conteúdo pendente de revisão.</td></tr>`;
+        revisaoBody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#6B7280;">Nenhum conteúdo pendente.</td></tr>`;
     } else {
         revisaoBody.innerHTML = revisar.map(r => `
             <tr>
