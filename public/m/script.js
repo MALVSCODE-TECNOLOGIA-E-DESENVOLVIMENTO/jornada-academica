@@ -2,8 +2,9 @@ const API_URL = '/api';
 let token = localStorage.getItem('jornada_token');
 let registrosGlobais = [];
 
+// Fallback de segurança (a proteção real está no <head> do index.html)
 if (!token) {
-    window.location.href = '/login/';
+    window.location.replace('/login/');
 }
 
 const modalForm = document.getElementById('modal-form');
@@ -21,7 +22,7 @@ async function carregarRegistros() {
         const res = await fetch(`${API_URL}/registros`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
-        
+
         if (res.status === 401 || res.status === 403) { logout(); return; }
 
         registrosGlobais = await res.json();
@@ -57,11 +58,11 @@ function renderTable() {
     const search = document.getElementById('search').value.toLowerCase();
     const materiaFiltro = document.getElementById('filter-materia').value;
     const situacaoFiltro = document.getElementById('filter-situacao').value;
-    
+
     const filtrados = registrosGlobais.filter(r => {
         const desempenho = calcularDesempenho(r.qtd_questoes, r.qtd_erros);
         const situacao = obterSituacao(desempenho).texto;
-        
+
         const matchSearch = r.conteudo.toLowerCase().includes(search) || r.materia.toLowerCase().includes(search);
         const matchMateria = materiaFiltro ? r.materia === materiaFiltro : true;
         const matchSituacao = situacaoFiltro ? situacao === situacaoFiltro : true;
@@ -70,7 +71,7 @@ function renderTable() {
     });
 
     const emptyState = document.getElementById('emptyState');
-    
+
     if (filtrados.length === 0) {
         listContainer.innerHTML = '';
         emptyState.hidden = false;
@@ -85,12 +86,12 @@ function renderTable() {
         const cardClass = situacao.texto === 'ÓTIMO' ? 'row-otimo' : '';
 
         return `
-            <div class="list-card ${cardClass}">
+            <div class="study-card ${cardClass}">
                 <div class="card-top">
                     <span class="card-title">${r.materia}</span>
                     <span class="badge ${situacao.classe}">${situacao.texto}</span>
                 </div>
-                
+
                 <div class="card-grid">
                     <div class="card-cell" style="grid-column: 1 / -1;">
                         <span class="cell-label">Conteúdo</span>
@@ -135,7 +136,6 @@ function atualizarDashboard() {
     document.getElementById('dash-desempenho').textContent = `${mediaDesempenho}%`;
 }
 
-// --- MODAL REVISÃO ---
 function abrirModalRevisao() {
     const revisaoBody = document.getElementById('revisao-body');
     const revisar = registrosGlobais.filter(r => {
@@ -163,12 +163,11 @@ function fecharModalRevisao() {
     modalRevisao.setAttribute('aria-hidden', 'true');
 }
 
-// --- MODAL CADASTRO/EDIÇÃO ---
 function abrirModal(id = null) {
     const form = document.getElementById('form-registro');
     form.reset();
     document.getElementById('desempenho_calculado').value = '';
-    
+
     if (id) {
         document.getElementById('modal-title').textContent = 'Editar Registro';
         document.getElementById('registro-id').value = id;
@@ -186,7 +185,7 @@ function abrirModal(id = null) {
         document.getElementById('registro-id').value = '';
         document.getElementById('data').value = new Date().toISOString().split('T')[0];
     }
-    
+
     modalForm.classList.add('show');
     modalForm.setAttribute('aria-hidden', 'false');
 }
@@ -200,7 +199,7 @@ function calcularDesempenhoModal() {
     const qtd = parseInt(document.getElementById('qtd_questoes').value) || 0;
     const erros = parseInt(document.getElementById('qtd_erros').value) || 0;
     const input = document.getElementById('desempenho_calculado');
-    
+
     if (qtd > 0) {
         const calc = Math.round(((qtd - erros) / qtd) * 100);
         input.value = `${calc}% (${calc === 100 ? 'ÓTIMO' : calc >= 60 ? 'BOM' : 'RUIM'})`;
@@ -244,14 +243,14 @@ async function salvarRegistro() {
             body: JSON.stringify(payload)
         });
 
-        if (res.ok) { 
-            fecharModal(); 
-            carregarRegistros(); 
-        } else { 
-            alert('Erro ao salvar.'); 
+        if (res.ok) {
+            fecharModal();
+            carregarRegistros();
+        } else {
+            alert('Erro ao salvar.');
         }
-    } catch (err) { 
-        console.error(err); 
+    } catch (err) {
+        console.error(err);
         alert('Erro de conexão.');
     }
 }
@@ -267,5 +266,4 @@ async function excluirRegistro(id) {
     } catch (err) { console.error(err); }
 }
 
-// Inicialização
 carregarRegistros();
