@@ -24,10 +24,7 @@ async function carregarRegistros() {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         
-        if (res.status === 401 || res.status === 403) {
-            logout();
-            return;
-        }
+        if (res.status === 401 || res.status === 403) { logout(); return; }
 
         registrosGlobais = await res.json();
         preencherFiltroMaterias();
@@ -41,7 +38,6 @@ async function carregarRegistros() {
 function preencherFiltroMaterias() {
     const select = document.getElementById('filter-materia');
     const materiasUnicas = [...new Set(registrosGlobais.map(r => r.materia))].sort();
-    
     select.innerHTML = '<option value="">Todas as Matérias</option>';
     materiasUnicas.forEach(m => {
         select.innerHTML += `<option value="${m}">${m}</option>`;
@@ -50,8 +46,7 @@ function preencherFiltroMaterias() {
 
 function calcularDesempenho(qtd, erros) {
     if (qtd === 0) return 0;
-    const acertos = qtd - erros;
-    return Math.round((acertos / qtd) * 100);
+    return Math.round(((qtd - erros) / qtd) * 100);
 }
 
 function obterSituacao(desempenho) {
@@ -77,7 +72,7 @@ function renderTable() {
     });
 
     if (filtrados.length === 0) {
-        tableBody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#6B7280; padding:2rem;">Nenhum registro encontrado.</td></tr>`;
+        tableBody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#6B7280; padding:2rem;">Nenhum registro encontrado.</td></tr>`;
         return;
     }
 
@@ -85,13 +80,13 @@ function renderTable() {
         const dataFormatada = new Date(r.data + 'T00:00:00').toLocaleDateString('pt-BR');
         const desempenho = calcularDesempenho(r.qtd_questoes, r.qtd_erros);
         const situacao = obterSituacao(desempenho);
+        const rowClass = situacao.texto === 'ÓTIMO' ? 'row-otimo' : '';
 
         return `
-            <tr>
+            <tr class="${rowClass}">
                 <td><strong>${r.materia}</strong></td>
                 <td>${r.conteudo}</td>
                 <td>${dataFormatada}</td>
-                <td><strong>${desempenho}%</strong></td>
                 <td><span class="badge ${situacao.classe}">${situacao.texto}</span></td>
                 <td style="text-align: center;">
                     <button class="action-btn btn-edit" onclick="abrirModal('${r.id}')">Editar</button>
@@ -104,35 +99,55 @@ function renderTable() {
 
 function atualizarDashboard() {
     const total = registrosGlobais.length;
-    let concluidos = 0;
-    let alertas = 0;
-    let somaDesempenho = 0;
-    const hoje = new Date();
-    hoje.setHours(0,0,0,0);
+    let concluidos = 0, revisao = 0, somaDesempenho = 0;
 
     registrosGlobais.forEach(r => {
         const desempenho = calcularDesempenho(r.qtd_questoes, r.qtd_erros);
         somaDesempenho += desempenho;
 
         if (desempenho === 100) concluidos++;
-
-        const dataEstudo = new Date(r.data + 'T00:00:00');
-        if (dataEstudo < hoje && desempenho < 100) {
-            alertas++;
-        }
+        if (desempenho < 100) revisao++; // BOM (60-99) e RUIM (<60)
     });
 
     const mediaDesempenho = total > 0 ? Math.round(somaDesempenho / total) : 0;
 
     document.getElementById('dash-total').textContent = total;
     document.getElementById('dash-concluidos').textContent = concluidos;
-    document.getElementById('dash-alerta').textContent = alertas;
+    document.getElementById('dash-revisao').textContent = revisao;
     document.getElementById('dash-desempenho').textContent = `${mediaDesempenho}%`;
 }
 
+// --- Modal de Revisão ---
+function abrirModalRevisao() {
+    const revisaoBody = document.getElementById('revisao-body');
+    const revisar = registrosGlobais.filter(r => {
+        const desempenho = calcularDesempenho(r.qtd_questoes, r.qtd_erros);
+        return desempenho < 100; // Pega BOM e RUIM
+    });
+
+    if (revisar.length === 0) {
+        revisaoBody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#6B7280;">Nenhum conteúdo pendente de revisão.</td></tr>`;
+    } else {
+        revisaoBody.innerHTML = revisar.map(r => `
+            <tr>
+                <td>${r.materia}</td>
+                <td>${r.conteudo}</td>
+                <td>${new Date(r.data + 'T00:00:00').toLocaleDateString('pt-BR')}</td>
+            </tr>
+        `).join('');
+    }
+    document.getElementById('modal-revisao').classList.add('active');
+}
+
+function fecharModalRevisao() {
+    document.getElementById('modal-revisao').classList.remove('active');
+}
+
+// --- CRUD ---
 function abrirModal(id = null) {
     modal.classList.add('active');
     formRegistro.reset();
+    document.getElementById('desempenho_calculado').value = '';
     
     if (id) {
         document.getElementById('modal-title').textContent = 'Editar Registro';
@@ -144,6 +159,7 @@ function abrirModal(id = null) {
             document.getElementById('data').value = r.data;
             document.getElementById('qtd_questoes').value = r.qtd_questoes;
             document.getElementById('qtd_erros').value = r.qtd_erros;
+            calcularDesempenhoModal();
         }
     } else {
         document.getElementById('modal-title').textContent = 'Novo Registro';
@@ -154,6 +170,19 @@ function abrirModal(id = null) {
 
 function fecharModal() {
     modal.classList.remove('active');
+}
+
+function calcularDesempenhoModal() {
+    const qtd = parseInt(document.getElementById('qtd_questoes').value) || 0;
+    const erros = parseInt(document.getElementById('qtd_erros').value) || 0;
+    const input = document.getElementById('desempenho_calculado');
+    
+    if (qtd > 0) {
+        const calc = Math.round(((qtd - erros) / qtd) * 100);
+        input.value = `${calc}% (${calc === 100 ? 'ÓTIMO' : calc >= 60 ? 'BOM' : 'RUIM'})`;
+    } else {
+        input.value = '';
+    }
 }
 
 formRegistro.addEventListener('submit', async (e) => {
@@ -182,24 +211,17 @@ formRegistro.addEventListener('submit', async (e) => {
             body: JSON.stringify(payload)
         });
 
-        if (res.ok) {
-            fecharModal();
-            carregarRegistros();
-        } else {
-            alert('Erro ao salvar registro.');
-        }
+        if (res.ok) { fecharModal(); carregarRegistros(); } else { alert('Erro ao salvar.'); }
     } catch (err) { console.error(err); }
 });
 
 async function excluirRegistro(id) {
     if (!confirm('Deseja realmente excluir este registro?')) return;
-
     try {
         const res = await fetch(`${API_URL}/registros/${id}`, {
             method: 'DELETE',
             headers: { 'Authorization': `Bearer ${token}` }
         });
-        
         if (res.ok) carregarRegistros();
     } catch (err) { console.error(err); }
 }
