@@ -4,9 +4,26 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Jornada Acadêmica</title>
-    <link rel="stylesheet" href="styles.css">
+
+    <!-- ANTI-FOUC: mesmo padrão do mobile -->
+    <style>
+        html { visibility: hidden; }
+        html.ready { visibility: visible; }
+    </style>
+    <script>
+        (function () {
+            if (!localStorage.getItem('jornada_token')) {
+                window.location.replace('/login/');
+            } else {
+                document.documentElement.classList.add('ready');
+            }
+        })();
+    </script>
+
+    <link rel="stylesheet" href="styles.css?v=6">
 </head>
 <body>
+
     <div class="container">
         <div class="top-bar">
             <h1 class="system-title">Jornada Acadêmica</h1>
@@ -16,7 +33,6 @@
             </button>
         </div>
 
-        <!-- Dashboards -->
         <div class="dashboard-grid">
             <div class="stat-card">
                 <div class="stat-icon bg-blue">
@@ -32,7 +48,6 @@
             </div>
             <div class="stat-card clickable" onclick="abrirModalRevisao()">
                 <div class="stat-icon bg-red">
-                    <!-- Ícone de Reciclagem -->
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 19H4.815a1.83 1.83 0 0 1-1.57-.881 1.785 1.785 0 0 1-.004-1.784L7.196 9.5"/><path d="M11 19h8.203a1.83 1.83 0 0 0 1.556-.89 1.784 1.784 0 0 0 0-1.775l-1.226-2.12"/><path d="m14 16-3 3 3 3"/><path d="M8.293 13.596 7.196 9.5 3.1 10.598"/><path d="m9.344 5.811 1.093-1.892A1.83 1.83 0 0 1 11.985 3a1.784 1.784 0 0 1 1.546.888l3.943 6.843"/><path d="m13.378 9.633 4.096 1.098 1.097-4.096"/></svg>
                 </div>
                 <div class="stat-content"><span class="stat-label">Revisão</span><strong class="stat-value" id="dash-revisao">0</strong></div>
@@ -45,7 +60,6 @@
             </div>
         </div>
 
-        <!-- Tabela -->
         <div class="card table-card">
             <div class="search-bar">
                 <input type="text" id="search" placeholder="Buscar por conteúdo..." oninput="renderTable()">
@@ -76,12 +90,10 @@
         </div>
     </div>
 
-    <!-- Botão Logout Fixo -->
     <button onclick="logout()" class="btn-logout-fixed" title="Sair do Sistema">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
     </button>
 
-    <!-- Modal Principal -->
     <div id="modal-form" class="modal-overlay">
         <div class="modal-content">
             <div class="modal-header">
@@ -136,7 +148,6 @@
         </div>
     </div>
 
-    <!-- Modal Revisão -->
     <div id="modal-revisao" class="modal-overlay">
         <div class="modal-content">
             <div class="modal-header">
@@ -157,6 +168,6 @@
         </div>
     </div>
 
-    <script src="script.js"></script>
+    <script src="script.js?v=6"></script>
 </body>
 </html>
