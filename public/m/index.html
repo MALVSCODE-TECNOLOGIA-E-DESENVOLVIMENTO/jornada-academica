@@ -8,7 +8,6 @@
 </head>
 <body>
     <div class="container">
-        <!-- Top Bar Mobile -->
         <div class="top-bar">
             <h1 class="system-title">Jornada Acadêmica</h1>
             <button onclick="logout()" class="btn-icon" title="Sair">
@@ -16,7 +15,6 @@
             </button>
         </div>
 
-        <!-- Dashboards (Mantendo Cores e Ícones) -->
         <div class="dashboard-grid">
             <div class="stat-card">
                 <div class="stat-icon bg-blue">
@@ -32,7 +30,8 @@
             </div>
             <div class="stat-card clickable" onclick="abrirModalRevisao()">
                 <div class="stat-icon bg-red">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                    <!-- Ícone de Reciclagem -->
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 19H4.815a1.83 1.83 0 0 1-1.57-.881 1.785 1.785 0 0 1-.004-1.784L7.196 9.5"/><path d="M11 19h8.203a1.83 1.83 0 0 0 1.556-.89 1.784 1.784 0 0 0 0-1.775l-1.226-2.12"/><path d="m14 16-3 3 3 3"/><path d="M8.293 13.596 7.196 9.5 3.1 10.598"/><path d="m9.344 5.811 1.093-1.892A1.83 1.83 0 0 1 11.985 3a1.784 1.784 0 0 1 1.546.888l3.943 6.843"/><path d="m13.378 9.633 4.096 1.098 1.097-4.096"/></svg>
                 </div>
                 <div class="stat-content"><span class="stat-label">Revisão</span><strong class="stat-value" id="dash-revisao">0</strong></div>
             </div>
@@ -44,7 +43,6 @@
             </div>
         </div>
 
-        <!-- Filtros Mobile -->
         <div class="filters-mobile">
             <input type="text" id="search" placeholder="Buscar por conteúdo ou matéria..." oninput="renderTable()">
             <div class="filter-row">
@@ -60,16 +58,13 @@
             </div>
         </div>
 
-        <!-- Lista de Cards Mobile -->
         <div id="list-container" class="list-container"></div>
     </div>
 
-    <!-- FAB (Botão Flutuante) -->
     <button onclick="abrirModal()" class="fab" title="Novo Registro">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
     </button>
 
-    <!-- Modal Principal (Bottom Sheet) -->
     <div id="modal-form" class="modal-overlay">
         <div class="modal-content">
             <div class="modal-header">
@@ -105,7 +100,7 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label>QTD Questões *</label>
-                        <input type="number" id="qtd_questoes" min="1" required oninput="calcularDesempenhoModal()">
+                        <input type="number" id="qtd_questoes" min="15" required oninput="calcularDesempenhoModal()">
                     </div>
                     <div class="form-group">
                         <label>QTD Erros *</label>
@@ -124,11 +119,10 @@
         </div>
     </div>
 
-    <!-- Modal Revisão (Bottom Sheet) -->
     <div id="modal-revisao" class="modal-overlay">
         <div class="modal-content">
             <div class="modal-header">
-                <h2>Revisão Pendente</h2>
+                <h2>Conteúdos para revisão</h2>
                 <button onclick="fecharModalRevisao()" class="close-btn">&times;</button>
             </div>
             <div class="table-responsive">
