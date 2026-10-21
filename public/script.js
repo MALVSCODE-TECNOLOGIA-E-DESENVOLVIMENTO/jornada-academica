@@ -2,56 +2,22 @@ const API_URL = '/api';
 let token = localStorage.getItem('jornada_token');
 let registrosGlobais = [];
 
-// Elementos DOM
-const loginScreen = document.getElementById('login-screen');
-const appScreen = document.getElementById('app-screen');
-const loginForm = document.getElementById('login-form');
+if (!token) {
+    window.location.href = '/login/';
+}
+
 const formRegistro = document.getElementById('form-registro');
 const modal = document.getElementById('modal-form');
 const tableBody = document.getElementById('table-body');
 
-// --- AUTENTICAÇÃO ---
-loginForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const username = document.getElementById('username').value;
-    const password = document.getElementById('password').value;
-    const errorMsg = document.getElementById('login-error');
-
-    try {
-        const res = await fetch(`${API_URL}/login`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, password })
-        });
-        const data = await res.json();
-
-        if (!res.ok) throw new Error(data.error || 'Erro ao logar');
-
-        token = data.token;
-        localStorage.setItem('jornada_token', token);
-        document.getElementById('user-name').textContent = `Olá, ${data.nome}`;
-        
-        loginScreen.style.display = 'none';
-        appScreen.style.display = 'block';
-        carregarRegistros();
-    } catch (err) {
-        errorMsg.textContent = err.message;
-    }
-});
-
+// Logout
 function logout() {
     localStorage.removeItem('jornada_token');
-    window.location.reload();
+    localStorage.removeItem('jornada_nome');
+    window.location.href = '/login/';
 }
 
-// Verifica se já está logado
-if (token) {
-    loginScreen.style.display = 'none';
-    appScreen.style.display = 'block';
-    carregarRegistros();
-}
-
-// --- CRUD E DASHBOARD ---
+// Carregar Dados
 async function carregarRegistros() {
     try {
         const res = await fetch(`${API_URL}/registros`, {
@@ -64,11 +30,22 @@ async function carregarRegistros() {
         }
 
         registrosGlobais = await res.json();
+        preencherFiltroMaterias();
         renderTable();
         atualizarDashboard();
     } catch (err) {
         console.error('Erro ao carregar:', err);
     }
+}
+
+function preencherFiltroMaterias() {
+    const select = document.getElementById('filter-materia');
+    const materiasUnicas = [...new Set(registrosGlobais.map(r => r.materia))].sort();
+    
+    select.innerHTML = '<option value="">Todas as Matérias</option>';
+    materiasUnicas.forEach(m => {
+        select.innerHTML += `<option value="${m}">${m}</option>`;
+    });
 }
 
 function calcularDesempenho(qtd, erros) {
@@ -85,14 +62,22 @@ function obterSituacao(desempenho) {
 
 function renderTable() {
     const search = document.getElementById('search').value.toLowerCase();
+    const materiaFiltro = document.getElementById('filter-materia').value;
+    const situacaoFiltro = document.getElementById('filter-situacao').value;
     
-    const filtrados = registrosGlobais.filter(r => 
-        r.materia.toLowerCase().includes(search) || 
-        r.conteudo.toLowerCase().includes(search)
-    );
+    const filtrados = registrosGlobais.filter(r => {
+        const desempenho = calcularDesempenho(r.qtd_questoes, r.qtd_erros);
+        const situacao = obterSituacao(desempenho).texto;
+        
+        const matchSearch = r.conteudo.toLowerCase().includes(search) || r.materia.toLowerCase().includes(search);
+        const matchMateria = materiaFiltro ? r.materia === materiaFiltro : true;
+        const matchSituacao = situacaoFiltro ? situacao === situacaoFiltro : true;
+
+        return matchSearch && matchMateria && matchSituacao;
+    });
 
     if (filtrados.length === 0) {
-        tableBody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--text-muted); padding:2rem;">Nenhum registro encontrado.</td></tr>`;
+        tableBody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#6B7280; padding:2rem;">Nenhum registro encontrado.</td></tr>`;
         return;
     }
 
@@ -145,7 +130,6 @@ function atualizarDashboard() {
     document.getElementById('dash-desempenho').textContent = `${mediaDesempenho}%`;
 }
 
-// --- MODAL ---
 function abrirModal(id = null) {
     modal.classList.add('active');
     formRegistro.reset();
@@ -183,7 +167,6 @@ formRegistro.addEventListener('submit', async (e) => {
         qtd_erros: parseInt(document.getElementById('qtd_erros').value)
     };
 
-    // Validação básica
     if (payload.qtd_erros > payload.qtd_questoes) {
         alert('O número de erros não pode ser maior que o total de questões.');
         return;
@@ -195,10 +178,7 @@ formRegistro.addEventListener('submit', async (e) => {
     try {
         const res = await fetch(url, {
             method,
-            headers: { 
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
             body: JSON.stringify(payload)
         });
 
@@ -208,9 +188,7 @@ formRegistro.addEventListener('submit', async (e) => {
         } else {
             alert('Erro ao salvar registro.');
         }
-    } catch (err) {
-        console.error(err);
-    }
+    } catch (err) { console.error(err); }
 });
 
 async function excluirRegistro(id) {
@@ -223,7 +201,7 @@ async function excluirRegistro(id) {
         });
         
         if (res.ok) carregarRegistros();
-    } catch (err) {
-        console.error(err);
-    }
+    } catch (err) { console.error(err); }
 }
+
+carregarRegistros();
