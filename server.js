@@ -9,14 +9,21 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || 'sua_chave_secreta_super_segura';
 
-// Configuração do Supabase
 const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_KEY; 
+const supabaseKey = process.env.SUPABASE_KEY || process.env.SUPABASE_ANON_KEY; 
+
+if (!supabaseUrl || !supabaseKey) {
+    console.error("❌ ERRO FATAL: Variáveis de ambiente do Supabase não configuradas!");
+    process.exit(1); 
+}
+
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 app.use(cors());
 app.use(express.json());
-app.use(express.static(__dirname)); // Serve os arquivos HTML/CSS/JS
+
+// CORREÇÃO AQUI: Agora o Express procura os arquivos HTML/CSS/JS dentro da pasta 'public'
+app.use(express.static(path.join(__dirname, 'public')));
 
 // Middleware de Autenticação
 function autenticarToken(req, res, next) {
@@ -120,7 +127,6 @@ app.delete('/api/registros/:id', autenticarToken, async (req, res) => {
     }
 });
 
-// O Render exige que o host seja '0.0.0.0' para rotear o tráfego externo
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`Servidor rodando na porta ${PORT}`);
 });
