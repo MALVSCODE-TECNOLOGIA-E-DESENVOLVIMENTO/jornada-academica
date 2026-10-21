@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Jornada Acadêmica - Mobile</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="top-bar">
+            <h1 class="system-title">Jornada Acadêmica</h1>
+            <button onclick="logout()" class="btn-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+            </button>
+        </div>
+
+        <button onclick="abrirModal()" class="btn-primary w-full mb-1">+ Novo Registro</button>
+
+        <div class="dashboard-grid">
+            <div class="stat-card">
+                <div class="stat-content"><span class="stat-label">Conteúdos</span><strong class="stat-value" id="dash-total">0</strong></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-content"><span class="stat-label">Concluídos</span><strong class="stat-value" id="dash-concluidos">0</strong></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-content"><span class="stat-label">Alerta</span><strong class="stat-value" id="dash-alerta">0</strong></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-content"><span class="stat-label">Desempenho</span><strong class="stat-value" id="dash-desempenho">0%</strong></div>
+            </div>
+        </div>
+
+        <!-- Filtros em pilha para mobile -->
+        <div class="filters-mobile">
+            <input type="text" id="search" placeholder="Buscar conteúdo..." oninput="renderTable()">
+            <select id="filter-materia" onchange="renderTable()"><option value="">Matéria (Todas)</option></select>
+            <select id="filter-situacao" onchange="renderTable()">
+                <option value="">Situação (Todas)</option>
+                <option value="ÓTIMO">ÓTIMO</option>
+                <option value="BOM">BOM</option>
+                <option value="RUIM">RUIM</option>
+            </select>
+        </div>
+
+        <!-- Lista de Cards no lugar da Tabela -->
+        <div id="list-container" class="list-container">
+            <!-- Injetado via JS -->
+        </div>
+    </div>
+
+    <!-- Modal igual ao desktop -->
+    <div id="modal-form" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modal-title">Novo Registro</h2>
+                <button onclick="fecharModal()" class="close-btn">&times;</button>
+            </div>
+            <form id="form-registro">
+                <input type="hidden" id="registro-id">
+                <div class="form-group">
+                    <label>Matéria *</label>
+                    <select id="materia" required>
+                        <option value="">Selecione...</option>
+                        <option value="Língua Portuguesa">Língua Portuguesa</option>
+                        <option value="Ética, Compliance e ESG">Ética, Compliance e ESG</option>
+                        <option value="Matemática/Raciocínio Lógico Quantitativo">Matemática/Raciocínio Lógico Quantitativo</option>
+                        <option value="Atualidades do Mercado Financeiro">Atualidades do Mercado Financeiro</option>
+                        <option value="Conhecimentos Bancários/Securitários">Conhecimentos Bancários/Securitários</option>
+                        <option value="Matemática Financeira">Matemática Financeira</option>
+                        <option value="Noções de Probabilidade e Estatística">Noções de Probabilidade e Estatística</option>
+                        <option value="Noções de Informática e Comportamentos Digitais">Noções de Informática e Comportamentos Digitais</option>
+                        <option value="Vendas, Negociação e Atendimento">Vendas, Negociação e Atendimento</option>
+                        <option value="Inteligência Emocional">Inteligência Emocional</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Conteúdo *</label>
+                    <input type="text" id="conteudo" required>
+                </div>
+                <div class="form-group">
+                    <label>Data *</label>
+                    <input type="date" id="data" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Questões *</label>
+                        <input type="number" id="qtd_questoes" min="1" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Erros *</label>
+                        <input type="number" id="qtd_erros" min="0" required>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" onclick="fecharModal()" class="btn-secondary">Cancelar</button>
+                    <button type="submit" class="btn-primary">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
