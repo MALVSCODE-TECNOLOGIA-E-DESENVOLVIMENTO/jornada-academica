@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Jornada Acadêmica - Mobile</title>
+    <title>Jornada Acadêmica</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -24,33 +24,29 @@
             <div class="stat-card">
                 <div class="stat-content"><span class="stat-label">Concluídos</span><strong class="stat-value" id="dash-concluidos">0</strong></div>
             </div>
-            <div class="stat-card">
-                <div class="stat-content"><span class="stat-label">Alerta</span><strong class="stat-value" id="dash-alerta">0</strong></div>
+            <div class="stat-card clickable" onclick="abrirModalRevisao()">
+                <div class="stat-content"><span class="stat-label">Revisão</span><strong class="stat-value" id="dash-revisao">0</strong></div>
             </div>
             <div class="stat-card">
                 <div class="stat-content"><span class="stat-label">Desempenho</span><strong class="stat-value" id="dash-desempenho">0%</strong></div>
             </div>
         </div>
 
-        <!-- Filtros em pilha para mobile -->
         <div class="filters-mobile">
             <input type="text" id="search" placeholder="Buscar conteúdo..." oninput="renderTable()">
             <select id="filter-materia" onchange="renderTable()"><option value="">Matéria (Todas)</option></select>
             <select id="filter-situacao" onchange="renderTable()">
-                <option value="">Situação (Todas)</option>
+                <option value="">Desempenho (Todos)</option>
                 <option value="ÓTIMO">ÓTIMO</option>
                 <option value="BOM">BOM</option>
                 <option value="RUIM">RUIM</option>
             </select>
         </div>
 
-        <!-- Lista de Cards no lugar da Tabela -->
-        <div id="list-container" class="list-container">
-            <!-- Injetado via JS -->
-        </div>
+        <div id="list-container" class="list-container"></div>
     </div>
 
-    <!-- Modal igual ao desktop -->
+    <!-- Modal Principal -->
     <div id="modal-form" class="modal-overlay">
         <div class="modal-content">
             <div class="modal-header">
@@ -86,18 +82,43 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label>Questões *</label>
-                        <input type="number" id="qtd_questoes" min="1" required>
+                        <input type="number" id="qtd_questoes" min="1" required oninput="calcularDesempenhoModal()">
                     </div>
                     <div class="form-group">
                         <label>Erros *</label>
-                        <input type="number" id="qtd_erros" min="0" required>
+                        <input type="number" id="qtd_erros" min="0" required oninput="calcularDesempenhoModal()">
                     </div>
+                </div>
+                <div class="form-group">
+                    <label>Desempenho Calculado</label>
+                    <input type="text" id="desempenho_calculado" readonly style="background:#E5E7EB; font-weight:bold;">
                 </div>
                 <div class="modal-actions">
                     <button type="button" onclick="fecharModal()" class="btn-secondary">Cancelar</button>
                     <button type="submit" class="btn-primary">Salvar</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- Modal Revisão -->
+    <div id="modal-revisao" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Revisão</h2>
+                <button onclick="fecharModalRevisao()" class="close-btn">&times;</button>
+            </div>
+            <div style="max-height: 60vh; overflow-y: auto;">
+                <table class="table-revisao">
+                    <thead>
+                        <tr><th>Matéria</th><th>Conteúdo</th><th>Data</th></tr>
+                    </thead>
+                    <tbody id="revisao-body"></tbody>
+                </table>
+            </div>
+            <div class="modal-actions mt-1">
+                <button type="button" onclick="fecharModalRevisao()" class="btn-secondary">Fechar</button>
+            </div>
         </div>
     </div>
 
