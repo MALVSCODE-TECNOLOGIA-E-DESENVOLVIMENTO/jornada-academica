@@ -10,14 +10,12 @@ const formRegistro = document.getElementById('form-registro');
 const modal = document.getElementById('modal-form');
 const tableBody = document.getElementById('table-body');
 
-// Logout
 function logout() {
     localStorage.removeItem('jornada_token');
     localStorage.removeItem('jornada_nome');
     window.location.href = '/login/';
 }
 
-// Carregar Dados
 async function carregarRegistros() {
     try {
         const res = await fetch(`${API_URL}/registros`, {
@@ -106,7 +104,7 @@ function atualizarDashboard() {
         somaDesempenho += desempenho;
 
         if (desempenho === 100) concluidos++;
-        if (desempenho < 100) revisao++; // BOM (60-99) e RUIM (<60)
+        if (desempenho < 100) revisao++;
     });
 
     const mediaDesempenho = total > 0 ? Math.round(somaDesempenho / total) : 0;
@@ -117,12 +115,11 @@ function atualizarDashboard() {
     document.getElementById('dash-desempenho').textContent = `${mediaDesempenho}%`;
 }
 
-// --- Modal de Revisão ---
 function abrirModalRevisao() {
     const revisaoBody = document.getElementById('revisao-body');
     const revisar = registrosGlobais.filter(r => {
         const desempenho = calcularDesempenho(r.qtd_questoes, r.qtd_erros);
-        return desempenho < 100; // Pega BOM e RUIM
+        return desempenho < 100;
     });
 
     if (revisar.length === 0) {
@@ -143,7 +140,6 @@ function fecharModalRevisao() {
     document.getElementById('modal-revisao').classList.remove('active');
 }
 
-// --- CRUD ---
 function abrirModal(id = null) {
     modal.classList.add('active');
     formRegistro.reset();
@@ -195,6 +191,12 @@ formRegistro.addEventListener('submit', async (e) => {
         qtd_questoes: parseInt(document.getElementById('qtd_questoes').value),
         qtd_erros: parseInt(document.getElementById('qtd_erros').value)
     };
+
+    // Nova validação de mínimo de 15 questões
+    if (payload.qtd_questoes < 15) {
+        alert('O número mínimo de questões por registro é 15.');
+        return;
+    }
 
     if (payload.qtd_erros > payload.qtd_questoes) {
         alert('O número de erros não pode ser maior que o total de questões.');
