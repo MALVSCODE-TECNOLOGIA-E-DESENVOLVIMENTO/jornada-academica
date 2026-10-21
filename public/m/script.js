@@ -2,14 +2,17 @@ const API_URL = '/api';
 let token = localStorage.getItem('jornada_token');
 let registrosGlobais = [];
 
-if (!token) window.location.href = '/login/';
+if (!token) {
+    window.location.href = '/login/';
+}
 
 const formRegistro = document.getElementById('form-registro');
 const modal = document.getElementById('modal-form');
-const listContainer = document.getElementById('list-container');
+const tableBody = document.getElementById('table-body');
 
 function logout() {
     localStorage.removeItem('jornada_token');
+    localStorage.removeItem('jornada_nome');
     window.location.href = '/login/';
 }
 
@@ -18,20 +21,25 @@ async function carregarRegistros() {
         const res = await fetch(`${API_URL}/registros`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
-        if (res.status === 401 || res.status === 403) { logout(); return; }
         
+        if (res.status === 401 || res.status === 403) { logout(); return; }
+
         registrosGlobais = await res.json();
         preencherFiltroMaterias();
         renderTable();
         atualizarDashboard();
-    } catch (err) { console.error(err); }
+    } catch (err) {
+        console.error('Erro ao carregar:', err);
+    }
 }
 
 function preencherFiltroMaterias() {
     const select = document.getElementById('filter-materia');
     const materiasUnicas = [...new Set(registrosGlobais.map(r => r.materia))].sort();
-    select.innerHTML = '<option value="">Matéria (Todas)</option>';
-    materiasUnicas.forEach(m => { select.innerHTML += `<option value="${m}">${m}</option>`; });
+    select.innerHTML = '<option value="">Todas as Matérias</option>';
+    materiasUnicas.forEach(m => {
+        select.innerHTML += `<option value="${m}">${m}</option>`;
+    });
 }
 
 function calcularDesempenho(qtd, erros) {
@@ -53,66 +61,69 @@ function renderTable() {
     const filtrados = registrosGlobais.filter(r => {
         const desempenho = calcularDesempenho(r.qtd_questoes, r.qtd_erros);
         const situacao = obterSituacao(desempenho).texto;
+        
         const matchSearch = r.conteudo.toLowerCase().includes(search) || r.materia.toLowerCase().includes(search);
         const matchMateria = materiaFiltro ? r.materia === materiaFiltro : true;
         const matchSituacao = situacaoFiltro ? situacao === situacaoFiltro : true;
+
         return matchSearch && matchMateria && matchSituacao;
     });
 
     if (filtrados.length === 0) {
-        listContainer.innerHTML = `<p style="text-align:center; color:#6B7280; padding:2rem;">Nenhum registro encontrado.</p>`;
+        tableBody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#6B7280; padding:2rem;">Nenhum registro encontrado.</td></tr>`;
         return;
     }
 
-    listContainer.innerHTML = filtrados.map(r => {
+    tableBody.innerHTML = filtrados.map(r => {
         const dataFormatada = new Date(r.data + 'T00:00:00').toLocaleDateString('pt-BR');
         const desempenho = calcularDesempenho(r.qtd_questoes, r.qtd_erros);
         const situacao = obterSituacao(desempenho);
-        const cardClass = situacao.texto === 'ÓTIMO' ? 'row-otimo' : '';
+        const rowClass = situacao.texto === 'ÓTIMO' ? 'row-otimo' : '';
 
         return `
-            <div class="mobile-card ${cardClass}">
-                <div class="mc-header">
-                    <strong>${r.materia}</strong>
-                    <span class="badge ${situacao.classe}">${situacao.texto}</span>
-                </div>
-                <div class="mc-body">
-                    <p><strong>Conteúdo:</strong> ${r.conteudo}</p>
-                    <p><strong>Data:</strong> ${dataFormatada}</p>
-                </div>
-                <div class="mc-actions">
-                    <button class="btn-edit" onclick="abrirModal('${r.id}')">Editar</button>
-                    <button class="btn-delete" onclick="excluirRegistro('${r.id}')">Excluir</button>
-                </div>
-            </div>
+            <tr class="${rowClass}">
+                <td><strong>${r.materia}</strong></td>
+                <td>${r.conteudo}</td>
+                <td>${dataFormatada}</td>
+                <td><span class="badge ${situacao.classe}">${situacao.texto}</span></td>
+                <td style="text-align: center;">
+                    <button class="action-btn btn-edit" onclick="abrirModal('${r.id}')">Editar</button>
+                    <button class="action-btn btn-delete" onclick="excluirRegistro('${r.id}')">Excluir</button>
+                </td>
+            </tr>
         `;
     }).join('');
 }
 
 function atualizarDashboard() {
+    const total = registrosGlobais.length;
     let concluidos = 0, revisao = 0, somaDesempenho = 0;
 
     registrosGlobais.forEach(r => {
         const desempenho = calcularDesempenho(r.qtd_questoes, r.qtd_erros);
         somaDesempenho += desempenho;
+
         if (desempenho === 100) concluidos++;
         if (desempenho < 100) revisao++;
     });
 
-    const media = registrosGlobais.length > 0 ? Math.round(somaDesempenho / registrosGlobais.length) : 0;
-    
-    document.getElementById('dash-total').textContent = registrosGlobais.length;
+    const mediaDesempenho = total > 0 ? Math.round(somaDesempenho / total) : 0;
+
+    document.getElementById('dash-total').textContent = total;
     document.getElementById('dash-concluidos').textContent = concluidos;
     document.getElementById('dash-revisao').textContent = revisao;
-    document.getElementById('dash-desempenho').textContent = `${media}%`;
+    document.getElementById('dash-desempenho').textContent = `${mediaDesempenho}%`;
 }
 
 function abrirModalRevisao() {
     const revisaoBody = document.getElementById('revisao-body');
-    const revisar = registrosGlobais.filter(r => calcularDesempenho(r.qtd_questoes, r.qtd_erros) < 100);
+    const revisar = registrosGlobais.filter(r => {
+        const desempenho = calcularDesempenho(r.qtd_questoes, r.qtd_erros);
+        return desempenho < 100;
+    });
 
     if (revisar.length === 0) {
-        revisaoBody.innerHTML = `<tr><td colspan="3" style="text-align:center;">Nenhum pendente.</td></tr>`;
+        revisaoBody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#6B7280;">Nenhum conteúdo pendente de revisão.</td></tr>`;
     } else {
         revisaoBody.innerHTML = revisar.map(r => `
             <tr>
@@ -125,7 +136,9 @@ function abrirModalRevisao() {
     document.getElementById('modal-revisao').classList.add('active');
 }
 
-function fecharModalRevisao() { document.getElementById('modal-revisao').classList.remove('active'); }
+function fecharModalRevisao() {
+    document.getElementById('modal-revisao').classList.remove('active');
+}
 
 function abrirModal(id = null) {
     modal.classList.add('active');
@@ -133,7 +146,7 @@ function abrirModal(id = null) {
     document.getElementById('desempenho_calculado').value = '';
     
     if (id) {
-        document.getElementById('modal-title').textContent = 'Editar';
+        document.getElementById('modal-title').textContent = 'Editar Registro';
         document.getElementById('registro-id').value = id;
         const r = registrosGlobais.find(x => x.id === id);
         if (r) {
@@ -145,13 +158,15 @@ function abrirModal(id = null) {
             calcularDesempenhoModal();
         }
     } else {
-        document.getElementById('modal-title').textContent = 'Novo';
+        document.getElementById('modal-title').textContent = 'Novo Registro';
         document.getElementById('registro-id').value = '';
         document.getElementById('data').value = new Date().toISOString().split('T')[0];
     }
 }
 
-function fecharModal() { modal.classList.remove('active'); }
+function fecharModal() {
+    modal.classList.remove('active');
+}
 
 function calcularDesempenhoModal() {
     const qtd = parseInt(document.getElementById('qtd_questoes').value) || 0;
@@ -178,7 +193,7 @@ formRegistro.addEventListener('submit', async (e) => {
     };
 
     if (payload.qtd_erros > payload.qtd_questoes) {
-        alert('Erros não podem ser maiores que o total de questões.');
+        alert('O número de erros não pode ser maior que o total de questões.');
         return;
     }
 
@@ -191,15 +206,17 @@ formRegistro.addEventListener('submit', async (e) => {
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
             body: JSON.stringify(payload)
         });
-        if (res.ok) { fecharModal(); carregarRegistros(); } else { alert('Erro ao salvar'); }
+
+        if (res.ok) { fecharModal(); carregarRegistros(); } else { alert('Erro ao salvar.'); }
     } catch (err) { console.error(err); }
 });
 
 async function excluirRegistro(id) {
-    if (!confirm('Deseja excluir?')) return;
+    if (!confirm('Deseja realmente excluir este registro?')) return;
     try {
         const res = await fetch(`${API_URL}/registros/${id}`, {
-            method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` }
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
         });
         if (res.ok) carregarRegistros();
     } catch (err) { console.error(err); }
