@@ -6,16 +6,35 @@
     <meta name="theme-color" content="#F4F5F7">
     <meta name="color-scheme" content="light only">
     <title>Jornada Acadêmica</title>
-    <link rel="icon" type="image/png" href="/apps/imagens/logo-navegador.png">
+
+    <!-- ═══════════════════════════════════════════════════════════
+         ANTI-FOUC (Flash of Unauthenticated Content)
+         Executa ANTES do body renderizar.
+         - Sem token → redireciona imediatamente para /login/
+         - Com token → marca <html class="ready"> e mostra a página
+         ═══════════════════════════════════════════════════════════ -->
+    <style>
+        html { visibility: hidden; }
+        html.ready { visibility: visible; }
+    </style>
+    <script>
+        (function () {
+            if (!localStorage.getItem('jornada_token')) {
+                window.location.replace('/login/');
+            } else {
+                document.documentElement.classList.add('ready');
+            }
+        })();
+    </script>
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/shared/ui-refined.css">
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles.css?v=6">
 </head>
 <body>
 
-    <!-- Topo: Título e Logout -->
+    <!-- Topo -->
     <div class="top-bar">
         <h1 class="system-title">Jornada Acadêmica</h1>
         <button onclick="logout()" class="btn-icon-logout" title="Sair">
@@ -23,7 +42,7 @@
         </button>
     </div>
 
-    <!-- Dashboard 2x2 -->
+    <!-- Dashboard -->
     <div class="dashboard-grid">
         <div class="stat-card">
             <div class="stat-icon bg-blue">
@@ -51,7 +70,7 @@
         </div>
     </div>
 
-    <!-- Barra de Pesquisa -->
+    <!-- Busca -->
     <div class="search-bar">
         <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="11" cy="11" r="8"/>
@@ -73,21 +92,18 @@
         </select>
     </div>
 
-    <!-- Lista de Cards -->
+    <!-- Lista -->
     <div class="list" id="list-container"></div>
 
     <div class="empty-state" id="emptyState" hidden>
         <div class="empty-icon">📚</div>
         <div class="empty-title">Nenhum registro encontrado</div>
-        <div class="empty-desc">Toque em <b>+</b> para cadastrar seu primeiro estudo.</div>
+        <div class="empty-desc">Toque em <b>+</b> para cadastrar.</div>
     </div>
 
-    <!-- FAB Group -->
+    <!-- FAB -->
     <div class="fab-group">
-        <div class="icons-row" id="iconsRow">
-            <!-- Nenhum ícone extra necessário por padrão, mas deixamos a estrutura -->
-        </div>
-        <button class="fab-register" id="addBtn" type="button" onclick="abrirModal()" aria-label="Novo Registro" title="Novo Registro">
+        <button class="fab-register" onclick="abrirModal()" aria-label="Novo Registro" title="Novo Registro">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                 <line x1="12" y1="5" x2="12" y2="19"/>
                 <line x1="5" y1="12" x2="19" y2="12"/>
@@ -95,7 +111,7 @@
         </button>
     </div>
 
-    <!-- Modal Principal (Cadastro/Edição) -->
+    <!-- Modal Cadastro/Edição -->
     <div class="modal" id="modal-form" aria-hidden="true">
         <div class="modal-box" role="dialog" aria-modal="true">
             <header class="modal-head">
@@ -107,7 +123,7 @@
             <div class="modal-body">
                 <form id="form-registro">
                     <input type="hidden" id="registro-id">
-                    
+
                     <div class="field">
                         <label>Matéria *</label>
                         <select id="materia" required>
@@ -124,7 +140,7 @@
                             <option value="Inteligência Emocional">Inteligência Emocional</option>
                         </select>
                     </div>
-                    
+
                     <div class="field">
                         <label>Conteúdo *</label>
                         <input type="text" id="conteudo" required autocomplete="off">
@@ -186,7 +202,6 @@
         </div>
     </div>
 
-    <script src="/shared/ir-common.js"></script>
-    <script src="script.js"></script>
+    <script src="script.js?v=6"></script>
 </body>
 </html>
