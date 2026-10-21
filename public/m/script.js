@@ -68,16 +68,17 @@ function renderTable() {
         const dataFormatada = new Date(r.data + 'T00:00:00').toLocaleDateString('pt-BR');
         const desempenho = calcularDesempenho(r.qtd_questoes, r.qtd_erros);
         const situacao = obterSituacao(desempenho);
+        const cardClass = situacao.texto === 'ÓTIMO' ? 'row-otimo' : '';
 
         return `
-            <div class="mobile-card">
+            <div class="mobile-card ${cardClass}">
                 <div class="mc-header">
                     <strong>${r.materia}</strong>
                     <span class="badge ${situacao.classe}">${situacao.texto}</span>
                 </div>
                 <div class="mc-body">
                     <p><strong>Conteúdo:</strong> ${r.conteudo}</p>
-                    <p><strong>Data:</strong> ${dataFormatada} | <strong>Desempenho:</strong> ${desempenho}%</p>
+                    <p><strong>Data:</strong> ${dataFormatada}</p>
                 </div>
                 <div class="mc-actions">
                     <button class="btn-edit" onclick="abrirModal('${r.id}')">Editar</button>
@@ -89,28 +90,47 @@ function renderTable() {
 }
 
 function atualizarDashboard() {
-    let concluidos = 0, alertas = 0, somaDesempenho = 0;
-    const hoje = new Date(); hoje.setHours(0,0,0,0);
+    let concluidos = 0, revisao = 0, somaDesempenho = 0;
 
     registrosGlobais.forEach(r => {
         const desempenho = calcularDesempenho(r.qtd_questoes, r.qtd_erros);
         somaDesempenho += desempenho;
         if (desempenho === 100) concluidos++;
-        const dataEstudo = new Date(r.data + 'T00:00:00');
-        if (dataEstudo < hoje && desempenho < 100) alertas++;
+        if (desempenho < 100) revisao++;
     });
 
     const media = registrosGlobais.length > 0 ? Math.round(somaDesempenho / registrosGlobais.length) : 0;
     
     document.getElementById('dash-total').textContent = registrosGlobais.length;
     document.getElementById('dash-concluidos').textContent = concluidos;
-    document.getElementById('dash-alerta').textContent = alertas;
+    document.getElementById('dash-revisao').textContent = revisao;
     document.getElementById('dash-desempenho').textContent = `${media}%`;
 }
+
+function abrirModalRevisao() {
+    const revisaoBody = document.getElementById('revisao-body');
+    const revisar = registrosGlobais.filter(r => calcularDesempenho(r.qtd_questoes, r.qtd_erros) < 100);
+
+    if (revisar.length === 0) {
+        revisaoBody.innerHTML = `<tr><td colspan="3" style="text-align:center;">Nenhum pendente.</td></tr>`;
+    } else {
+        revisaoBody.innerHTML = revisar.map(r => `
+            <tr>
+                <td>${r.materia}</td>
+                <td>${r.conteudo}</td>
+                <td>${new Date(r.data + 'T00:00:00').toLocaleDateString('pt-BR')}</td>
+            </tr>
+        `).join('');
+    }
+    document.getElementById('modal-revisao').classList.add('active');
+}
+
+function fecharModalRevisao() { document.getElementById('modal-revisao').classList.remove('active'); }
 
 function abrirModal(id = null) {
     modal.classList.add('active');
     formRegistro.reset();
+    document.getElementById('desempenho_calculado').value = '';
     
     if (id) {
         document.getElementById('modal-title').textContent = 'Editar';
@@ -122,6 +142,7 @@ function abrirModal(id = null) {
             document.getElementById('data').value = r.data;
             document.getElementById('qtd_questoes').value = r.qtd_questoes;
             document.getElementById('qtd_erros').value = r.qtd_erros;
+            calcularDesempenhoModal();
         }
     } else {
         document.getElementById('modal-title').textContent = 'Novo';
@@ -131,6 +152,19 @@ function abrirModal(id = null) {
 }
 
 function fecharModal() { modal.classList.remove('active'); }
+
+function calcularDesempenhoModal() {
+    const qtd = parseInt(document.getElementById('qtd_questoes').value) || 0;
+    const erros = parseInt(document.getElementById('qtd_erros').value) || 0;
+    const input = document.getElementById('desempenho_calculado');
+    
+    if (qtd > 0) {
+        const calc = Math.round(((qtd - erros) / qtd) * 100);
+        input.value = `${calc}% (${calc === 100 ? 'ÓTIMO' : calc >= 60 ? 'BOM' : 'RUIM'})`;
+    } else {
+        input.value = '';
+    }
+}
 
 formRegistro.addEventListener('submit', async (e) => {
     e.preventDefault();
