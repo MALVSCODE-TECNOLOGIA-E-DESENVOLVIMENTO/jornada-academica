@@ -53,7 +53,6 @@ function obterSituacao(desempenho) {
     return { texto: 'RUIM', classe: 'badge-ruim' };
 }
 
-// Renderização em formato de Cards para Mobile
 function renderTable() {
     const search = document.getElementById('search').value.toLowerCase();
     const materiaFiltro = document.getElementById('filter-materia').value;
@@ -196,6 +195,12 @@ formRegistro.addEventListener('submit', async (e) => {
         qtd_questoes: parseInt(document.getElementById('qtd_questoes').value),
         qtd_erros: parseInt(document.getElementById('qtd_erros').value)
     };
+
+    // Nova validação de mínimo de 15 questões
+    if (payload.qtd_questoes < 15) {
+        alert('O número mínimo de questões por registro é 15.');
+        return;
+    }
 
     if (payload.qtd_erros > payload.qtd_questoes) {
         alert('O número de erros não pode ser maior que o total de questões.');
